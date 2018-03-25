@@ -1,0 +1,126 @@
+#include <ESP8266WiFi.h>
+#include <FirebaseArduino.h>
+
+// Set these to run example.
+#define FIREBASE_HOST "smartemergency-88439.firebaseio.com"
+#define FIREBASE_AUTH "token_or_secret"
+#define WIFI_SSID "IoT2018"
+#define WIFI_PASSWORD "00000000"
+#define MAX_STEP 6
+#define NUM_NODES 12
+
+int stepCount = 0;
+int ste[MAX_STEP];
+int node[NUM_NODES];
+int val;
+int stateIR = 1;
+int lastStateIR = 1;
+int irThreshold = 0;
+void setup() {
+  Serial.begin(9600);
+
+  // connect to wifi.
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println();
+  Serial.print("connected: ");
+  Serial.println(WiFi.localIP());
+  
+  Firebase.begin(FIREBASE_HOST);
+  Firebase.setInt("step",0);
+  //settup
+  
+
+     node[0] = 14;
+     pinMode(node[0],OUTPUT); 
+     node[1] = 12;
+     pinMode(node[1],OUTPUT); 
+     node[2] = 13;
+     pinMode(node[2],OUTPUT); 
+     node[3] = 15;
+     pinMode(node[3],OUTPUT); 
+     node[4] = 0;
+     pinMode(node[4],OUTPUT); 
+     node[5] = 16;
+     pinMode(node[5],OUTPUT); 
+     node[6] = 2;
+     pinMode(node[6],OUTPUT); 
+     node[7] = 5;
+     pinMode(node[7],OUTPUT);
+     
+  randomSeed( analogRead(A0));
+   //randomize start
+   for(int i=0; i<NUM_NODES; i++)
+   {
+      
+        digitalWrite(node[i],random(0,2));
+       //digitalWrite(node[i],HIGH);
+   }
+
+    //read path
+   for(int i =0; i<MAX_STEP;i++)
+  {
+    // get value 
+    //Serial.print("Step ");
+    //Serial.print(i);
+    //Serial.print(":");
+    //Serial.println(Firebase.getInt("step"+(String)i));
+    //Serial.println(Firebase.success());
+    ste[i]=Firebase.getInt("step"+(String)i);
+    
+  }
+
+  irThreshold = analogRead(A0)+50;
+  digitalWrite(node[ste[stepCount]],HIGH);
+}
+
+
+
+void loop() {
+  // get step number 
+    //Serial.print("Step number:");
+    //Serial.println(Firebase.getInt("step"));
+    //stepCount = Firebase.getInt("step");
+    
+  
+
+      if(stepCount < MAX_STEP && ste[stepCount] >= 0)
+      { 
+        bool NorSouthMove = abs(ste[stepCount] - ste[stepCount+1]) == 1;
+       if (NorSouthMove)
+          digitalWrite(node[ste[stepCount]],HIGH);
+      else
+         digitalWrite(node[ste[stepCount]], LOW);
+      }
+      else
+      {
+        //finished
+        
+      }
+
+      //vehicle clearance
+val = analogRead(A0);
+Serial.println(val);
+
+lastStateIR=stateIR;
+if (val<=200)
+{
+  
+  stateIR = 0;
+}
+else
+{
+  stateIR = 1;
+}
+if (stateIR != lastStateIR && lastStateIR == 1)
+{
+  stepCount++;
+ Firebase.setInt("step",stepCount);
+}
+
+      //after clearance  
+}
