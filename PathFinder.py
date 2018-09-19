@@ -1,12 +1,6 @@
 from firebase import firebase
 
-
 import tkinter as tk
-#import Tkinter as Tk
-
-
-
-
 
 end = 1
 start = -1
@@ -29,6 +23,7 @@ def shortest_path(graph, start, goal):
     except StopIteration:
         return None
 
+    
 graph = {0: set([1, 4]),
          1: set([0, 2, 5]),
          2: set([1, 3, 6]),
@@ -41,9 +36,6 @@ graph = {0: set([1, 4]),
          9: set([5, 8, 10]),
          10: set([6, 9, 11]),
          11: set([7, 10])}
-
-
-
 
 def onClick(x):
     global win, start, last, end
